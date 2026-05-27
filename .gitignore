@@ -1,0 +1,14 @@
+# Node Modules
+node_modules/
+
+# Environment Variables
+.env
+
+# Sensitive Student Data
+CSDS.json
+
+# Logs
+*.log
+
+# Mac System Files
+.DS_Store
