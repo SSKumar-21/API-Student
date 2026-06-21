@@ -4,89 +4,110 @@ import studentData from "./CSDS.json" with { type: "json" };
 
 dotenv.config();
 
-const PORT = process.env.PORT;
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-
 const students = Array.isArray(studentData)
-    ? studentData
-    : Object.values(studentData)[0];
-
+  ? studentData
+  : Object.values(studentData)[0];
 
 app.get("/", (req, res) => {
-    console.log("API Hit Detected");
-    res.json({
-            message: "🎓 Student Class API",
-            status: "Running",
-            routes: {
-                randomStudent: "/student/random",
-                searchByRoll: "/roll/:roll",
-                searchByName: "/name/:name",
-                classRepresentative: "/cr"
-            }
-        });
+  res.json({
+    api: "Student Class API",
+    version: "1.0.0",
+    status: "Online",
+    totalStudents: students.length,
+    endpoints: {
+      randomStudent: "/student/random",
+      searchByRoll: "/roll/:roll",
+      searchByName: "/name/:name",
+      getCR: "/cr",
+    },
+  });
 });
-
 
 app.get("/student/random", (req, res) => {
-    const randomIndex = Math.floor(Math.random() * students.length);
-    res.json(students[randomIndex]);
-    console.log("Random student data is sent");
+  if (!students.length) {
+    return res.status(404).json({
+      success: false,
+      message: "No students found",
+    });
+  }
+
+  const randomStudent =
+    students[Math.floor(Math.random() * students.length)];
+
+  res.json({
+    success: true,
+    student: randomStudent,
+  });
 });
 
-
 app.get("/cr", (req, res) => {
-    const cr = students.filter(child => child.isCR === true);
-    if (!cr) {
-        return res.json({message: "CR Not Found"});
-    }
-    console.log("CR data is sent");
-    res.json(cr);
+  const cr = students.filter((student) => student.isCR);
+
+  if (!cr.length) {
+    return res.status(404).json({
+      success: false,
+      message: "CR Not Found",
+    });
+  }
+
+  res.json({
+    success: true,
+    count: cr.length,
+    data: cr,
+  });
 });
 
 app.get("/roll/:roll", (req, res) => {
-    const roll = req.params.roll;
-    const stud = students.filter(child => child["Student Roll No."] == roll);
+  const student = students.find(
+    (s) => s["Student Roll No."] == req.params.roll
+  );
 
-    if (!stud) {
-        return res.json({message: "Student Not Found"});
-    }
-    console.log("Student Data is Sent");
-    res.json(stud);
+  if (!student) {
+    return res.status(404).json({
+      success: false,
+      message: "Student Not Found",
+    });
+  }
+
+  res.json({
+    success: true,
+    data: student,
+  });
 });
-
 
 app.get("/name/:name", (req, res) => {
+  const name = req.params.name.toLowerCase();
 
-    const name = req.params.name.toLowerCase();
+  const result = students.filter((student) =>
+    student["Student Name "]?.toLowerCase().includes(name)
+  );
 
-    const stud = students.filter(child => {
-
-        if (!child["Student Name "]) {
-            return false;
-        }
-
-        return child["Student Name "]
-            .toLowerCase()
-            .includes(name);
+  if (!result.length) {
+    return res.status(404).json({
+      success: false,
+      message: "Student Not Found",
     });
+  }
 
-    if (stud.length === 0) {
-        return res.json({
-            message: "Student Not Found"
-        });
-    }
-
-    console.log("Student Name Search Data Sent");
-
-    res.json(stud);
+  res.json({
+    success: true,
+    count: result.length,
+    data: result,
+  });
 });
 
-
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route Not Found",
+  });
+});
 
 app.listen(PORT, () => {
-
-    console.log(`Server Running on Port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
