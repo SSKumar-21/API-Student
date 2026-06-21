@@ -17,7 +17,16 @@ const students = Array.isArray(studentData)
 
 app.get("/", (req, res) => {
     console.log("API Hit Detected");
-    res.send("Students Details are Ready");
+    res.json({
+            message: "🎓 Student Class API",
+            status: "Running",
+            routes: {
+                randomStudent: "/student/random",
+                searchByRoll: "/roll/:roll",
+                searchByName: "/name/:name",
+                classRepresentative: "/cr"
+            }
+        });
 });
 
 
